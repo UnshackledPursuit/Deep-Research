@@ -1,47 +1,66 @@
-import Link from "next/link";
+'use client';
+
+import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export default function Home() {
+  const [markdown, setMarkdown] = useState('');
+  const [sections, setSections] = useState<{ heading: string; content: string; }[]>([]);
+
+  const handlePaste = (text: string) => {
+    setMarkdown(text);
+    // Parse headings and content
+    const lines = text.split('\n');
+    const newSections = [];
+    let currentHeading = '';
+    let currentContent: string[] = [];
+
+    for (const line of lines) {
+      if (line.startsWith('#')) {
+        if (currentHeading) {
+          newSections.push({
+            heading: currentHeading,
+            content: currentContent.join('\n')
+          });
+          currentContent = [];
+        }
+        currentHeading = line.replace(/^#+\s/, '');
+      } else if (currentHeading) {
+        currentContent.push(line);
+      }
+    }
+
+    if (currentHeading) {
+      newSections.push({
+        heading: currentHeading,
+        content: currentContent.join('\n')
+      });
+    }
+
+    setSections(newSections);
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8">
-      <div>
-        <h2 className="text-2xl font-semibold text-center border p-4 font-mono rounded-md">
-          Get started by choosing a template path from the /paths/ folder.
-        </h2>
+    <main className="container mx-auto p-4">
+      <div className="mb-8">
+        <textarea
+          className="w-full h-64 p-4 border rounded-lg"
+          placeholder="Paste your markdown content here..."
+          onChange={(e) => handlePaste(e.target.value)}
+          value={markdown}
+        />
       </div>
-      <div>
-        <h1 className="text-6xl font-bold text-center">Make anything you imagine 🪄</h1>
-        <h2 className="text-2xl text-center font-light text-gray-500 pt-4">
-          This whole page will be replaced when you run your template path.
-        </h2>
-      </div>
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">AI Chat App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            An intelligent conversational app powered by AI models, featuring real-time responses
-            and seamless integration with Next.js and various AI providers.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">AI Image Generation App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            Create images from text prompts using AI, powered by the Replicate API and Next.js.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">Social Media App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            A feature-rich social platform with user profiles, posts, and interactions using
-            Firebase and Next.js.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">Voice Notes App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            A voice-based note-taking app with real-time transcription using Deepgram API, 
-            Firebase integration for storage, and a clean, simple interface built with Next.js.
-          </p>
-        </div>
+
+      <div className="space-y-8">
+        {sections.map((section, index) => (
+          <div key={index} className="border rounded-lg p-4">
+            <h2 className="text-2xl font-bold mb-4">{section.heading}</h2>
+            <div className="bg-gray-800 aspect-video mb-4 rounded-lg flex items-center justify-center text-white cursor-pointer hover:bg-gray-700 transition-colors">
+              Click to add animation code
+            </div>
+            <ReactMarkdown>{section.content}</ReactMarkdown>
+          </div>
+        ))}
       </div>
     </main>
   );
